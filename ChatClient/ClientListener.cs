@@ -42,7 +42,7 @@ namespace ChatClient
         {
             try
             {
-                return ChatMessageTranfer.ReadMessage(ChatClient._stream);
+                return ChatMessageTranfer.ReadMessage(ChatClient._stream).Result;
             }
             catch (Exception ex)
             {

@@ -157,26 +157,19 @@ namespace ChatClient
             }
         }
 
-        //private byte[] PrepareMessageToBeSent(ChatMessage message)
-        //{
-        //    var serializedMessage = JsonSerializer.Serialize(message);
-        //    byte[] myWriteBuffer = Encoding.ASCII.GetBytes(serializedMessage);
-        //    return myWriteBuffer;
-        //}
-
         private void SendMessage(ChatMessage chatMessage)
         {
             var convertedMessageBuffer = ChatMessageTranfer.PrepareMessageToBeSent(chatMessage);
             ChatMessageTranfer.SendMessage(convertedMessageBuffer, _stream);
-            //_stream.Write(convertedMessageBuffer, 0, convertedMessageBuffer.Length);
         }
 
-        private void HandleFileInMessage(ChatMessage chatMessage, string filePath)
+        private async Task HandleFileInMessage(ChatMessage chatMessage, string filePath)
         {
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
             {
                 long length = new FileInfo(filePath).Length;
-                var file = new ChatFile() { FileNameWithExtension = Path.GetFileName(filePath), Content = File.ReadAllBytes(filePath), FileLength = length };
+                var fileContent = await File.ReadAllBytesAsync(filePath);
+                var file = new ChatFile() { FileNameWithExtension = Path.GetFileName(filePath), Content = fileContent, FileLength = length };
                 chatMessage.File = file;
             }
         }

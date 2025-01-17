@@ -109,7 +109,7 @@ namespace ChatServer
 
         private ChatMessage ReadMessage(NetworkStream stream)
         {
-            return ChatMessageTranfer.ReadMessage(stream);            
+            return ChatMessageTranfer.ReadMessage(stream).Result;            
         }
 
         private bool IsUsernameUnique(string userName)
