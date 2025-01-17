@@ -1,10 +1,5 @@
 ﻿using ChatCommon;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChatServer
 {
@@ -13,7 +8,6 @@ namespace ChatServer
         private TcpListener _tcpListener;
         private Dictionary<string, TcpClient> _clientsDictionary;
         private object _clientsDictionaryLock;
-        private MessageSender _messageSender;
         private Queue<ChatMessage> _messagesQueue;
         private object _messagesQueueLock;
         private EventWaitHandle _eventWaitHandle;
@@ -25,7 +19,6 @@ namespace ChatServer
             _tcpListener = tcpListener;
             _clientsDictionary = clientsDictionary;
             _clientsDictionaryLock = clientsDictionaryLock;
-            _messageSender = new MessageSender(_clientsDictionary, _clientsDictionaryLock);
             _messagesQueue = messagesQueue;
             _messagesQueueLock = messagesQueueLock;
             _eventWaitHandle = eventWaitHandle;

@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace ChatClient
 {
-    public class ChatClient
+    public class ChatClient : IChatClient
     {
         private static readonly ChatClient _instance = new ChatClient();
         public static List<string> _connectedUsersList;

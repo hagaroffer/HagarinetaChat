@@ -48,7 +48,6 @@ namespace ChatClient
             {
                 lock (ChatClient._connectedUsersListLock)
                 {
-                    var a = message.Message.Split(" ").ToList();
                     ChatClient._connectedUsersList = message.Message.Split(" ").ToList();
                 }
                 return;
