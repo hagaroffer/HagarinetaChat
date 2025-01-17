@@ -21,12 +21,31 @@ namespace ChatClient
 
         private ChatClient()
         {
+            RegisterAppExistEvents();
+
             _connectedUsersListLock = new object();
 
             lock (_connectedUsersListLock)
             {
                 _connectedUsersList = new List<string>();
             }
+        }
+
+        private void RegisterAppExistEvents()
+        {
+            AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
+            {
+                Disconnect();
+            };
+
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                Console.WriteLine("Application is exiting...");
+                Disconnect();
+
+                // Prevent immediate termination
+                e.Cancel = true;
+            };
         }
 
         public static ChatClient Instance
@@ -49,14 +68,7 @@ namespace ChatClient
             }
             catch (Exception ex)
             {
-                if (_stream != null)
-                {
-                    _stream.Close();
-                }
-                if (_client != null)
-                {
-                    _client.Close();
-                }
+                Disconnect();
                 return;
             }            
         }
@@ -109,19 +121,59 @@ namespace ChatClient
             }
         }
 
+        public void Disconnect()
+        {
+            try
+            {
+                ChatMessage disconnectMessage = new ChatMessage(MessageType.Disconnect, string.Empty, _myUsername);
+                SendMessage(disconnectMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(CreateExceptionMsg(ex, "Disconnect"));
+            }
+            finally
+            {
+                _stream?.Close();
+                _client?.Close();
+                Console.WriteLine("Disconnected from server successfully.");
+            }
+        }
 
         private void InitTcpListener()
         {
-            string ipAddress = Configurations.IpAddress;
-            int port = int.Parse(Configurations.Port);
-            
             try
-            {                
+            {
+                string ipAddress = Configurations.IpAddress;
+                int port = int.Parse(Configurations.Port);
+
                 _client = new TcpClient();
                 _client.Connect(IPAddress.Parse(ipAddress), port);
                 _stream = _client.GetStream();
+
+                Task.Run(async () =>
+                {
+                    while (_client.Connected)
+                    {
+                        try
+                        {
+                            if (_stream == null)
+                            {
+                                throw new Exception("Disconnected from server.");
+                            }
+
+                            await Task.Delay(1000);
+                        }
+                        catch
+                        {
+                            Console.WriteLine("Lost connection to the server.");
+                            Disconnect();
+                            break;
+                        }
+                    }
+                });
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Console.WriteLine(CreateExceptionMsg(ex, "InitTcpListener"));
                 throw;

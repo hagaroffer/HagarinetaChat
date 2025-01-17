@@ -1,5 +1,6 @@
 ﻿using ChatCommon;
 using System;
+using System.IO;
 using System.Net.Sockets;
 using System.Text.Json;
 
@@ -28,13 +29,29 @@ namespace ChatClient
             {
                 while (true)
                 {
+                    if (ChatClient._stream == null || !ChatClient._stream.CanRead)
+                    {
+                        Console.WriteLine("Disconnected from server.");
+                        break;
+                    }
+
                     var message = ReadMessage();
+                    if (message == null)
+                    {
+                        Console.WriteLine("Server disconnected.");
+                        break;
+                    }
                     ProcessMessage(message);
                 }
             }
             catch (Exception ex)
             {
-                return;
+                Console.WriteLine("Disconnected due to an error: " + ex.Message);
+            }
+            finally
+            {
+                ChatClient._stream?.Close();
+                ChatClient.Instance.Disconnect();
             }
         }
 

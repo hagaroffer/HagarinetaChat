@@ -55,21 +55,36 @@ namespace ChatServer
 
         private void ListenToNewCreatedConnection(TcpClient client, NetworkStream stream, string userName)
         {
+            var message = ReadMessage(stream);
+            message.SourceUsername = userName;
+
+            if (message.MessageType == MessageType.Disconnect)
+            {
+                HandleClientDisconnect(userName, client, stream);
+                return;
+            }
+
+            lock (_messagesQueueLock)
+            {
+                _messagesQueue.Enqueue(message);
+                _eventWaitHandle.Set();
+            }
+        }
+
+        private void HandleClientDisconnect(string userName, TcpClient client, NetworkStream stream)
+        {
             try
             {
-                var message = ReadMessage(stream);
-                message.SourceUsername = userName;
-
-                lock (_messagesQueueLock)
+                lock (_clientsDictionaryLock)
                 {
-                    _messagesQueue.Enqueue(message);
-                    _eventWaitHandle.Set();
+                    _clientsDictionary.Remove(userName);
                 }
+
+                stream?.Close();
+                _client?.Close();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "ListenToNewCreatedConnection"));
-                throw;
             }
         }
 
@@ -100,7 +115,7 @@ namespace ChatServer
                     return string.Empty;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(CreateExceptionMsg(ex, "CreateNewClient"));
                 throw;
@@ -109,7 +124,7 @@ namespace ChatServer
 
         private ChatMessage ReadMessage(NetworkStream stream)
         {
-            return ChatMessageTranfer.ReadMessage(stream).Result;            
+            return ChatMessageTranfer.ReadMessage(stream).Result;
         }
 
         private bool IsUsernameUnique(string userName)

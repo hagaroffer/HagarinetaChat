@@ -29,7 +29,8 @@ namespace ChatCommon
     {
         Private = 0,
         Broadcast = 1,
-        ConnectedUsers = 2
+        ConnectedUsers = 2,
+        Disconnect = 3
     }
 
     public class ChatFile
