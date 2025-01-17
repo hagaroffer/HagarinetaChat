@@ -24,9 +24,10 @@ namespace ChatServer
 
                 InitQueueMessagesSenderThread();
 
-                InitNewConnectionsListenerThread();
-
                 Console.WriteLine("Chat server is running");
+
+                ListenToNewConnectionRequests();
+
             }
             catch (Exception ex)
             {
@@ -80,22 +81,10 @@ namespace ChatServer
             }
         }
 
-        private void InitNewConnectionsListenerThread()
+        private void ListenToNewConnectionRequests()
         {
-            //var a = new NewConnectionsListener(_tcpListener, _clientsDictionary, _clientsDictionaryLock, _messagesQueue, _messagesQueueLock, _eventWaitHandle);
-            //ThreadPool.QueueUserWorkItem(new WaitCallback(a.ListenToConnectionRequests));
-
-            try
-            {
-
-                Thread newConnectionsListenerThread = new Thread(new NewConnectionsListener(_tcpListener, _clientsDictionary, _clientsDictionaryLock, _messagesQueue, _messagesQueueLock, _eventWaitHandle).ListenToConnectionRequests);
-                newConnectionsListenerThread.Start();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitNewConnectionsListenerThread"));
-                throw;
-            }
+            var connectionsListener = new NewConnectionsListener(_tcpListener, _clientsDictionary, _clientsDictionaryLock, _messagesQueue, _messagesQueueLock, _eventWaitHandle);
+            connectionsListener.ListenToConnectionRequests();
         }
 
         private string CreateExceptionMsg(Exception ex, string methodName)
