@@ -43,7 +43,7 @@ namespace ChatServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "HandleMessagesQueue"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleMessagesQueue"));
                 return;
             }
         }
@@ -60,12 +60,6 @@ namespace ChatServer
             {
                 messageSender.SendBroadcastMessage(message);
             }
-        }
-
-        private string CreateExceptionMsg(Exception ex, string methodName)
-        {
-            string errorMsg = string.Format(@"Failure in {0}.{1}Error: {2}. {3}StackTrace: {4}", methodName, Environment.NewLine, ex.Message, Environment.NewLine, ex.StackTrace);
-            return errorMsg;
         }
     }
 }

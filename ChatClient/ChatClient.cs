@@ -85,7 +85,7 @@ namespace ChatClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "SendPrivateMessage"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "SendPrivateMessage"));
             }
         }
 
@@ -101,7 +101,7 @@ namespace ChatClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "SendBroadcastMessage"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "SendBroadcastMessage"));
             }
         }
 
@@ -116,7 +116,7 @@ namespace ChatClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "GetConnectedClients"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "GetConnectedClients"));
                 return null;
             }
         }
@@ -130,7 +130,7 @@ namespace ChatClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "Disconnect"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "Disconnect"));
             }
             finally
             {
@@ -175,7 +175,7 @@ namespace ChatClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitTcpListener"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitTcpListener"));
                 throw;
             }
         }
@@ -190,7 +190,7 @@ namespace ChatClient
             }
             catch (Exception ex) 
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitTcpLisInitListenerThreadtener"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitTcpLisInitListenerThreadtener"));
                 throw;
             }
         }
@@ -204,7 +204,7 @@ namespace ChatClient
             }
             catch (Exception ex) 
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "SendConnectionMessage"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "SendConnectionMessage"));
                 throw;
             }
         }
@@ -225,12 +225,5 @@ namespace ChatClient
                 chatMessage.File = file;
             }
         }
-
-        private string CreateExceptionMsg(Exception ex, string methodName)
-        {
-            string errorMsg = string.Format(@"Failure in {0}.{1}Error: {2}. {3}StackTrace: {4}", methodName, Environment.NewLine, ex.Message, Environment.NewLine, ex.StackTrace);
-            return errorMsg;
-        }
-
     }
 }

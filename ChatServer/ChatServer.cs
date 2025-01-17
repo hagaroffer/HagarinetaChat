@@ -26,12 +26,12 @@ namespace ChatServer
             }
             catch (SocketException ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitServer - Socket Error"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitServer - Socket Error"));
                 CleanupServer();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitServer"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitServer"));
                 CleanupServer();
             }
         }
@@ -48,7 +48,7 @@ namespace ChatServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitVariables"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitVariables"));
                 throw;
             }
         }
@@ -65,17 +65,17 @@ namespace ChatServer
             }
             catch (FormatException ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitTcpListener - Invalid IP or Port"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitTcpListener - Invalid IP or Port"));
                 throw;
             }
             catch (SocketException ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitTcpListener - Socket Error"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitTcpListener - Socket Error"));
                 throw;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitTcpListener"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitTcpListener"));
                 throw;
             }
         }
@@ -90,7 +90,7 @@ namespace ChatServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitQueueMessagesSenderThread"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitQueueMessagesSenderThread"));
                 throw;
             }
         }
@@ -111,7 +111,7 @@ namespace ChatServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "ListenToNewConnectionRequests"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "ListenToNewConnectionRequests"));
                 throw;
             }
         }
@@ -129,13 +129,8 @@ namespace ChatServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "CleanupServer"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "CleanupServer"));
             }
-        }
-
-        private string CreateExceptionMsg(Exception ex, string methodName)
-        {
-            return $@"Failure in {methodName}.Error: {ex.Message}StackTrace: {ex.StackTrace}";
         }
     }
 }

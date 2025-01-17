@@ -35,11 +35,6 @@ namespace ChatServer
                 NetworkStream stream = _client.GetStream();
 
                 var userName = CreateNewClient(_client, stream);
-                if (string.IsNullOrEmpty(userName))
-                {
-                    //??????????????????????
-                    //return false;
-                }
 
                 while (true)
                 {
@@ -48,7 +43,7 @@ namespace ChatServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "HandleNewConnection"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleNewConnection"));
                 return;
             }
         }
@@ -112,12 +107,11 @@ namespace ChatServer
                 {
                     //LOG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     throw new Exception(string.Format("Username {0} already exists", userName));
-                    return string.Empty;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "CreateNewClient"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "CreateNewClient"));
                 throw;
             }
         }
@@ -167,22 +161,5 @@ namespace ChatServer
             _messageSender.SendBroadcastMessage(broadcastConnectionMessage);
         }
 
-        //private void ListenToClientMessages(TcpClient client, NetworkStream stream, string userName)
-        //{
-        //    var message = ReadMessage(client, stream);
-        //    message.SourceUsername = userName;
-
-        //    lock (_messagesQueueLock)
-        //    {
-        //        _messagesQueue.Enqueue(message);
-        //        _eventWaitHandle.Set();
-        //    }
-        //}
-
-        private string CreateExceptionMsg(Exception ex, string methodName)
-        {
-            string errorMsg = string.Format(@"Failure in {0}.{1}Error: {2}. {3}StackTrace: {4}", methodName, Environment.NewLine, ex.Message, Environment.NewLine, ex.StackTrace);
-            return errorMsg;
-        }
     }
 }

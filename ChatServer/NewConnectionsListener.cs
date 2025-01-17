@@ -51,7 +51,7 @@ namespace ChatServer
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(CreateExceptionMsg(ex, "WaitForNewConnectionRequest"));
+                    Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "WaitForNewConnectionRequest"));
                     throw;
                 }
             }
@@ -66,17 +66,10 @@ namespace ChatServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "InitSingleConnectionListenerThread"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitSingleConnectionListenerThread"));
                 throw;
             }
         }
-
-        private string CreateExceptionMsg(Exception ex, string methodName)
-        {
-            string errorMsg = string.Format(@"Failure in {0}.{1}Error: {2}. {3}StackTrace: {4}", methodName, Environment.NewLine, ex.Message, Environment.NewLine, ex.StackTrace);
-            return errorMsg;
-        }
-
     }
 }
 

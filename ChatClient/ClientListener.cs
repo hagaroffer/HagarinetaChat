@@ -63,7 +63,7 @@ namespace ChatClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "ReadMessage"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "ReadMessage"));
                 return null;
             }
         }
@@ -109,7 +109,7 @@ namespace ChatClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine(CreateExceptionMsg(ex, "ProcessMessage"));
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "ProcessMessage"));
                 return;
             }
         }
@@ -123,12 +123,6 @@ namespace ChatClient
             string path = string.Concat(fileName, "_", randomString, fileExtension);
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), path);
             return filePath;
-        }
-
-        private string CreateExceptionMsg(Exception ex, string methodName)
-        {
-            string errorMsg = string.Format(@"Failure in {0}.{1}Error: {2}. {3}StackTrace: {4}", methodName, Environment.NewLine, ex.Message, Environment.NewLine, ex.StackTrace);
-            return errorMsg;
         }
     }
 }
