@@ -15,7 +15,6 @@ namespace ChatServer
         private EventWaitHandle _eventWaitHandle;
         TcpClient _client;
 
-
         public SingleConnectionListener(Dictionary<string, TcpClient> clientsDictionary, object clientsDictionaryLock,
             Queue<ChatMessage> messagesQueue, object messagesQueueLock, EventWaitHandle eventWaitHandle, TcpClient client)
         {
@@ -34,12 +33,25 @@ namespace ChatServer
             {
                 NetworkStream stream = _client.GetStream();
 
-                var userName = CreateNewClient(_client, stream);
+                var userName = CreateNewClient(stream);
 
                 while (true)
                 {
-                    ListenToNewCreatedConnection(_client, stream, userName);
+                    try
+                    {
+                        ListenToNewCreatedConnection(stream, userName);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "ListenToNewCreatedConnection"));
+                        break;
+                    }
                 }
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleNewConnection - Socket Exception"));
+                return;
             }
             catch (Exception ex)
             {
@@ -48,21 +60,28 @@ namespace ChatServer
             }
         }
 
-        private void ListenToNewCreatedConnection(TcpClient client, NetworkStream stream, string userName)
+        private void ListenToNewCreatedConnection(NetworkStream stream, string userName)
         {
-            var message = ReadMessage(stream);
-            message.SourceUsername = userName;
-
-            if (message.MessageType == MessageType.Disconnect)
+            try
             {
-                HandleClientDisconnect(userName, client, stream);
-                return;
+                var message = ReadMessage(stream);
+                message.SourceUsername = userName;
+
+                if (message.MessageType == MessageType.Disconnect)
+                {
+                    HandleClientDisconnect(userName, _client, stream);
+                    return;
+                }
+
+                lock (_messagesQueueLock)
+                {
+                    _messagesQueue.Enqueue(message);
+                    _eventWaitHandle.Set();
+                }
             }
-
-            lock (_messagesQueueLock)
+            catch (Exception ex)
             {
-                _messagesQueue.Enqueue(message);
-                _eventWaitHandle.Set();
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "ListenToNewCreatedConnection"));
             }
         }
 
@@ -76,28 +95,37 @@ namespace ChatServer
                 }
 
                 stream?.Close();
-                _client?.Close();
+                client?.Close();
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleClientDisconnect - Socket Exception"));
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleClientDisconnect - IO Error"));
             }
             catch (Exception ex)
             {
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleClientDisconnect"));
             }
         }
 
-        private string CreateNewClient(TcpClient client, NetworkStream stream)
+        private string CreateNewClient(NetworkStream stream)
         {
             try
             {
                 var message = ReadMessage(stream);
                 if (message == null)
                 {
-                    return string.Empty;
+                    throw new Exception("Received message is null, cannot proceed with client creation.");
                 }
 
                 var userName = message.Message.ToLower();
 
                 if (IsUsernameUnique(userName))
                 {
-                    AddNewUserToDictionary(userName, client);
+                    AddNewUserToDictionary(userName, _client);
                     SendConnectionBroadcastMessage(userName);
                     SendConnectedClients();
 
@@ -105,7 +133,6 @@ namespace ChatServer
                 }
                 else
                 {
-                    //LOG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     throw new Exception(string.Format("Username {0} already exists", userName));
                 }
             }
@@ -118,48 +145,75 @@ namespace ChatServer
 
         private ChatMessage ReadMessage(NetworkStream stream)
         {
-            return ChatMessageTranfer.ReadMessage(stream).Result;
+            try
+            {
+                return ChatMessageTranfer.ReadMessage(stream).Result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "ReadMessage"));
+                return null;
+            }
         }
 
         private bool IsUsernameUnique(string userName)
         {
-            var isUsernameAlreadyExists = false;
-
+            bool isUsernameAlreadyExists;
             lock (_clientsDictionaryLock)
             {
                 isUsernameAlreadyExists = _clientsDictionary.ContainsKey(userName);
             }
 
-            if (isUsernameAlreadyExists) return false;
-            return true;
+            return !isUsernameAlreadyExists;
         }
 
         private void AddNewUserToDictionary(string userName, TcpClient client)
         {
-            lock (_clientsDictionaryLock)
+            try
             {
-                _clientsDictionary.Add(userName, client);
+                lock (_clientsDictionaryLock)
+                {
+                    _clientsDictionary.Add(userName, client);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "AddNewUserToDictionary"));
+                throw;
             }
         }
 
         private void SendConnectionBroadcastMessage(string userName)
         {
-            ChatMessage broadcastConnectionMessage =
-                    new ChatMessage(MessageType.Broadcast, string.Empty, string.Format("User {0} has joined", userName));
-            broadcastConnectionMessage.SourceUsername = "Server";
+            try
+            {
+                ChatMessage broadcastConnectionMessage =
+                        new ChatMessage(MessageType.Broadcast, string.Empty, string.Format("User {0} has joined", userName));
+                broadcastConnectionMessage.SourceUsername = "Server";
 
-            _messageSender.SendBroadcastMessage(broadcastConnectionMessage);
+                _messageSender.SendBroadcastMessage(broadcastConnectionMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "SendConnectionBroadcastMessage"));
+            }
         }
 
         private void SendConnectedClients()
         {
-            string usersString = string.Join(" ", _clientsDictionary.Keys.ToArray());
-            ChatMessage broadcastConnectionMessage =
-                    new ChatMessage(MessageType.ConnectedUsers, string.Empty, string.Format(usersString));
-            broadcastConnectionMessage.SourceUsername = "Server";
+            try
+            {
+                string usersString = string.Join(" ", _clientsDictionary.Keys.ToArray());
+                ChatMessage broadcastConnectionMessage =
+                        new ChatMessage(MessageType.ConnectedUsers, string.Empty, string.Format(usersString));
+                broadcastConnectionMessage.SourceUsername = "Server";
 
-            _messageSender.SendBroadcastMessage(broadcastConnectionMessage);
+                _messageSender.SendBroadcastMessage(broadcastConnectionMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "SendConnectedClients"));
+            }
         }
-
     }
 }

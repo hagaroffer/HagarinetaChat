@@ -61,8 +61,8 @@ namespace ChatServer
         {
             try
             {
-                var a = new SingleConnectionListener(_clientsDictionary, _clientsDictionaryLock, _messagesQueue, _messagesQueueLock, _eventWaitHandle, client);
-                ThreadPool.QueueUserWorkItem(new WaitCallback(a.HandleNewConnection));
+                var singleConnectionListener = new SingleConnectionListener(_clientsDictionary, _clientsDictionaryLock, _messagesQueue, _messagesQueueLock, _eventWaitHandle, client);
+                ThreadPool.QueueUserWorkItem(new WaitCallback(singleConnectionListener.HandleNewConnection));
             }
             catch (Exception ex)
             {
