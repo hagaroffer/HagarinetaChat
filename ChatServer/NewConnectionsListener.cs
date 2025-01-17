@@ -39,14 +39,13 @@ namespace ChatServer
             }
         }
 
-        private void WaitForNewConnectionRequest()
+        private async Task WaitForNewConnectionRequest()
         {
             if (_tcpListener.Pending())
             {
                 try
                 {
-                    //var client = await Task.Run(() => TcpListener.AcceptTcpClientAsync());
-                    var client = _tcpListener.AcceptTcpClient();
+                    var client = await _tcpListener.AcceptTcpClientAsync();
 
                     InitSingleConnectionListenerThread(client);
                 }
@@ -60,12 +59,6 @@ namespace ChatServer
 
         private void InitSingleConnectionListenerThread(TcpClient client)
         {
-            //    await Task.Run(() =>
-            //    {
-            //        var a = new SingleConnectionListener(_clientsDictionary, _clientsDictionaryLock, _messagesQueue, _messagesQueueLock, _eventWaitHandle, client);
-            //        a.HandleNewConnection(new object());
-            //    });
-
             try
             {
                 var a = new SingleConnectionListener(_clientsDictionary, _clientsDictionaryLock, _messagesQueue, _messagesQueueLock, _eventWaitHandle, client);
@@ -76,10 +69,6 @@ namespace ChatServer
                 Console.WriteLine(CreateExceptionMsg(ex, "InitSingleConnectionListenerThread"));
                 throw;
             }
-
-            //var singleConnectionListener = new Thread(() => new SingleConnectionListener(_clientsDictionary, _clientsDictionaryLock,
-            //                    _messagesQueue, _messagesQueueLock, _eventWaitHandle).HandleNewConnection(client));
-            //singleConnectionListener.Start();
         }
 
         private string CreateExceptionMsg(Exception ex, string methodName)

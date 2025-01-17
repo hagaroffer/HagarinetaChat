@@ -1,7 +1,5 @@
 ﻿using ChatCommon;
 using System.Net.Sockets;
-using System.Text;
-using System.Text.Json;
 
 namespace ChatServer
 {
@@ -30,7 +28,6 @@ namespace ChatServer
             {
                 var stream = client.GetStream();
                 ChatMessageTranfer.SendMessage(convertedMessageBuffer, stream);
-                //stream.Write(convertedMessageBuffer, 0, convertedMessageBuffer.Length);
             });
         }
 
@@ -48,7 +45,6 @@ namespace ChatServer
             {
                 Console.WriteLine(string.Format("Username {0} doesn't exists", chatMessage.DestinationUsername));
                 return false;
-                //Send error message to sender?
             }
 
             var stream = client.GetStream();

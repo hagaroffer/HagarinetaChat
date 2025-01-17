@@ -1,5 +1,4 @@
 ﻿using ChatCommon;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
