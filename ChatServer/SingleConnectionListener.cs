@@ -14,6 +14,7 @@ namespace ChatServer
         private object _messagesQueueLock;
         private EventWaitHandle _eventWaitHandle;
         TcpClient _client;
+        NetworkStream _stream;
 
         public SingleConnectionListener(Dictionary<string, TcpClient> clientsDictionary, object clientsDictionaryLock,
             Queue<ChatMessage> messagesQueue, object messagesQueueLock, EventWaitHandle eventWaitHandle, TcpClient client)
@@ -31,20 +32,20 @@ namespace ChatServer
         {
             try
             {
-                NetworkStream stream = _client.GetStream();
+                _stream = _client.GetStream();
 
-                var userName = CreateNewClient(stream);
+                string username = CreateNewClient();
 
                 while (_client.Connected)
                 {
                     try
                     {
-                        ListenToNewCreatedConnection(stream, userName);
+                        ListenToNewCreatedConnection(username);
                     }
                     catch (IOException)
                     {
-                        Console.WriteLine($"Client {userName} disconnected.");
-                        HandleClientDisconnect(userName, _client, stream);
+                        Console.WriteLine($"Client {username} disconnected.");
+                        HandleClientDisconnect(username);
                         break;
                     }
                     catch (Exception ex)
@@ -59,23 +60,23 @@ namespace ChatServer
             }
         }
 
-        private void ListenToNewCreatedConnection(NetworkStream stream, string userName)
+        private void ListenToNewCreatedConnection(string username)
         {
             try
             {
-                var message = ReadMessage(stream);
+                var message = ReadMessage();
 
                 if (message == null)
                 {
                     throw new IOException("Message is null, client might have disconnected.");
                 }
 
-                message.SourceUsername = userName;
+                message.SourceUsername = username;
 
                 if (message.MessageType == MessageType.Disconnect)
                 {
-                    Console.WriteLine($"User {userName} requested disconnect.");
-                    HandleClientDisconnect(userName, _client, stream);
+                    Console.WriteLine($"User {username} requested disconnect.");
+                    HandleClientDisconnect(username);
                     return;
                 }
 
@@ -93,23 +94,23 @@ namespace ChatServer
         }
 
 
-        private void HandleClientDisconnect(string userName, TcpClient client, NetworkStream stream)
+        private void HandleClientDisconnect(string username)
         {
             try
             {
                 lock (_clientsDictionaryLock)
                 {
-                    if (_clientsDictionary.ContainsKey(userName))
+                    if (_clientsDictionary.ContainsKey(username))
                     {
-                        _clientsDictionary.Remove(userName);
-                        Console.WriteLine($"Client {userName} removed from the dictionary.");
+                        _clientsDictionary.Remove(username);
+                        Console.WriteLine($"Client {username} removed from the dictionary.");
                     }
                 }
 
                 SendConnectedClients();
 
-                stream?.Close();
-                client?.Close();
+                _stream?.Close();
+                _client?.Close();
             }
             catch (Exception ex)
             {
@@ -117,29 +118,29 @@ namespace ChatServer
             }
         }
 
-        private string CreateNewClient(NetworkStream stream)
+        private string CreateNewClient()
         {
             try
             {
-                var message = ReadMessage(stream);
+                var message = ReadMessage();
                 if (message == null)
                 {
                     throw new Exception("Received message is null, cannot proceed with client creation.");
                 }
 
-                var userName = message.Message.ToLower();
+                var username = message.Message.ToLower();
 
-                if (IsUsernameUnique(userName))
+                if (IsUsernameUnique(username))
                 {
-                    AddNewUserToDictionary(userName, _client);
-                    SendConnectionBroadcastMessage(userName);
+                    AddNewUserToDictionary(username);
+                    SendConnectionBroadcastMessage(username);
                     SendConnectedClients();
 
-                    return userName;
+                    return username;
                 }
                 else
                 {
-                    throw new Exception(string.Format("Username {0} already exists", userName));
+                    throw new Exception(string.Format("Username {0} already exists", username));
                 }
             }
             catch (Exception ex)
@@ -149,11 +150,11 @@ namespace ChatServer
             }
         }
 
-        private ChatMessage ReadMessage(NetworkStream stream)
+        private ChatMessage ReadMessage()
         {
             try
             {
-                return ChatMessageTranfer.ReadMessage(stream);
+                return ChatMessageTranfer.ReadMessage(_stream);
             }
             catch (Exception ex)
             {
@@ -162,24 +163,24 @@ namespace ChatServer
             }
         }
 
-        private bool IsUsernameUnique(string userName)
+        private bool IsUsernameUnique(string username)
         {
             bool isUsernameAlreadyExists;
             lock (_clientsDictionaryLock)
             {
-                isUsernameAlreadyExists = _clientsDictionary.ContainsKey(userName);
+                isUsernameAlreadyExists = _clientsDictionary.ContainsKey(username);
             }
 
             return !isUsernameAlreadyExists;
         }
 
-        private void AddNewUserToDictionary(string userName, TcpClient client)
+        private void AddNewUserToDictionary(string username)
         {
             try
             {
                 lock (_clientsDictionaryLock)
                 {
-                    _clientsDictionary.Add(userName, client);
+                    _clientsDictionary.Add(username, _client);
                 }
             }
             catch (Exception ex)
@@ -189,12 +190,12 @@ namespace ChatServer
             }
         }
 
-        private void SendConnectionBroadcastMessage(string userName)
+        private void SendConnectionBroadcastMessage(string username)
         {
             try
             {
                 ChatMessage broadcastConnectionMessage =
-                        new ChatMessage(MessageType.Broadcast, string.Empty, string.Format("User {0} has joined", userName));
+                        new ChatMessage(MessageType.Broadcast, string.Empty, string.Format("User {0} has joined", username));
                 broadcastConnectionMessage.SourceUsername = "Server";
 
                 _messageSender.SendBroadcastMessage(broadcastConnectionMessage);

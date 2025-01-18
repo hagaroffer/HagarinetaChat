@@ -8,19 +8,16 @@ namespace ChatClient
 {
     public class ClientListener
     {
-        //public List<string> _connectedUsersList;
-        //private object _connectedUsersListLock;
-        //private NetworkStream _stream;
-        //private TcpClient _client;
+        public List<string> _connectedUsersList;
+        private object _connectedUsersListLock;
+        private NetworkStream _stream;
 
 
-        public ClientListener(List<string> connectedUsersList, object connectedUsersListLock,
-            /*TcpClient client,*/ NetworkStream stream)
+        public ClientListener(List<string> connectedUsersList, object connectedUsersListLock, NetworkStream stream)
         {
-            //_connectedUsersList = connectedUsersList;
-            //_connectedUsersListLock = connectedUsersListLock;
-            //_client = client;
-            //_stream = stream;
+            _connectedUsersList = connectedUsersList;
+            _connectedUsersListLock = connectedUsersListLock;
+            _stream = stream;
         }
 
         public void ListenToIncomingMessages()
@@ -29,7 +26,7 @@ namespace ChatClient
             {
                 while (true)
                 {
-                    if (ChatClient._stream == null || !ChatClient._stream.CanRead)
+                    if (_stream == null || !_stream.CanRead)
                     {
                         Console.WriteLine("Disconnected from server.");
                         break;
@@ -50,7 +47,7 @@ namespace ChatClient
             }
             finally
             {
-                ChatClient._stream?.Close();
+                _stream?.Close();
                 ChatClient.Instance.Disconnect();
             }
         }
@@ -59,7 +56,7 @@ namespace ChatClient
         {
             try
             {
-                return ChatMessageTranfer.ReadMessage(ChatClient._stream);
+                return ChatMessageTranfer.ReadMessage(_stream);
             }
             catch (Exception ex)
             {
@@ -79,9 +76,10 @@ namespace ChatClient
 
                 if (message.MessageType == MessageType.ConnectedUsers)
                 {
-                    lock (ChatClient._connectedUsersListLock)
+                    lock (_connectedUsersListLock)
                     {
-                        ChatClient._connectedUsersList = message.Message.Split(" ").ToList();
+                        _connectedUsersList.Clear();
+                        _connectedUsersList.AddRange(message.Message.Split(" "));
                     }
                     return;
                 }

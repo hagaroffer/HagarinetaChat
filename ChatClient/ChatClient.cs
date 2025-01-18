@@ -11,10 +11,11 @@ namespace ChatClient
     public class ChatClient : IChatClient
     {
         private static readonly ChatClient _instance = new ChatClient();
-        public static List<string> _connectedUsersList;
-        public static object _connectedUsersListLock;
 
-        public static NetworkStream _stream;
+        public List<string> _connectedUsersList;
+        public object _connectedUsersListLock;
+
+        public NetworkStream _stream;
         private TcpClient _client;
         private string _myUsername = string.Empty;
 
@@ -43,7 +44,6 @@ namespace ChatClient
                 Console.WriteLine("Application is exiting...");
                 Disconnect();
 
-                // Prevent immediate termination
                 e.Cancel = true;
             };
         }
