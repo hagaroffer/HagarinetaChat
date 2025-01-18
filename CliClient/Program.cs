@@ -116,8 +116,6 @@ public class Program
 
     private static void HandleConnectionRequest(string userName)
     {
-        //Thread thread = new Thread(() => _chatClient.StartClient(userName));
-        //thread.Start();
         _chatClient.StartClient(userName); 
     }
 
