@@ -16,7 +16,7 @@ namespace ChatClient
         public List<string> _connectedUsersList;
         public object _connectedUsersListLock;
 
-        public NetworkStream _stream;
+        private NetworkStream _stream;
         private TcpClient _client;
         private string _myUsername = string.Empty;
 
