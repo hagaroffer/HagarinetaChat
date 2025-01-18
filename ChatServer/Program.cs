@@ -17,6 +17,7 @@ public class Program
     {
         var tc = new ChatServer.ChatServer();
         tc.InitServer();
+        Console.ReadLine(); 
     }
 
     

@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace ChatClient
 {
@@ -32,21 +33,6 @@ namespace ChatClient
             }
         }
 
-        private void RegisterAppExistEvents()
-        {
-            AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
-            {
-                Disconnect();
-            };
-
-            Console.CancelKeyPress += (sender, e) =>
-            {
-                Console.WriteLine("Application is exiting...");
-                Disconnect();
-
-                e.Cancel = true;
-            };
-        }
 
         public static ChatClient Instance
         {
@@ -55,6 +41,8 @@ namespace ChatClient
 
         public void StartClient(string myUsername)
         {
+            if (!IsValidUsername(myUsername)) return;
+
             _myUsername = myUsername;
 
             try
@@ -64,10 +52,10 @@ namespace ChatClient
                 InitListenerThread();
 
                 SendConnectionMessage();
-
             }
             catch (Exception ex)
             {
+                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "StartClient"));
                 Disconnect();
                 return;
             }            
@@ -224,5 +212,55 @@ namespace ChatClient
                 chatMessage.File = file;
             }
         }
+
+        private void RegisterAppExistEvents()
+        {
+            AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
+            {
+                Disconnect();
+            };
+
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                Console.WriteLine("Application is exiting...");
+                Disconnect();
+
+                e.Cancel = true;
+            };
+        }
+
+        private bool IsValidUsername(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                return false;
+            }
+
+            if (username.Length < 3 || username.Length > 30)
+            {
+                return false;
+            }
+
+            // Regular expression to check if username contains only letters, digits, and underscores
+            string pattern = @"^[a-zA-Z0-9_]+$";
+            if (!Regex.IsMatch(username, pattern))
+            {
+                return false;
+            }
+
+            if (username.Trim() != username)
+            {
+                return false;
+            }
+
+            string[] reservedWords = { "admin", "root", "system" };
+            if (Array.Exists(reservedWords, word => word.Equals(username, StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
     }
 }
