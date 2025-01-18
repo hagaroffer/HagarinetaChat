@@ -9,10 +9,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class Program
 {
-    public static List<TcpClient> ClientsList;
-    public static TcpClient Client;
-    public static TcpListener TcpListener;
-
     static void Main(string[] args)
     {
         var tc = new ChatServer.ChatServer();

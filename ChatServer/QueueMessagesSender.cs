@@ -5,19 +5,8 @@ namespace ChatServer
 {
     public class QueueMessagesSender
     {
-        private Queue<ChatMessage> _messagesQueue;
-        private object _messagesQueueLock;
-        private EventWaitHandle _eventWaitHandle;
-        private Dictionary<string, TcpClient> _clientsDictionary;
-        private object _clientsDictionaryLock;
-
-        public QueueMessagesSender(Queue<ChatMessage> messagesQueue, object messagesQueueLock, EventWaitHandle eventWaitHandle, Dictionary<string, TcpClient> clientsDictionary, object clientsDictionaryLock) 
+        public QueueMessagesSender() 
         {
-            _messagesQueue = messagesQueue;
-            _messagesQueueLock = messagesQueueLock;
-            _eventWaitHandle = eventWaitHandle;
-            _clientsDictionary = clientsDictionary;
-            _clientsDictionaryLock = clientsDictionaryLock;
         }
 
         public void HandleMessagesQueue()
@@ -26,13 +15,13 @@ namespace ChatServer
             {
                 while (true)
                 {
-                    _eventWaitHandle.WaitOne();
+                    SharedResource.EventWaitHandle.WaitOne();
                     bool dequeueSucceed = false;
                     ChatMessage message;
 
-                    lock (_messagesQueueLock)
+                    lock (SharedResource.MessagesQueueLock)
                     {
-                        dequeueSucceed = _messagesQueue.TryDequeue(out message);
+                        dequeueSucceed = SharedResource.MessagesQueue.TryDequeue(out message);
                     }
 
                     if (dequeueSucceed)
@@ -50,7 +39,7 @@ namespace ChatServer
 
         private void SendMessage(ChatMessage message)
         {
-            var messageSender = new MessageSender(_clientsDictionary, _clientsDictionaryLock);
+            var messageSender = new MessageSender();
 
             if (message.MessageType.Equals(MessageType.Private))
             {

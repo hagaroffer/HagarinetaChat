@@ -7,17 +7,11 @@ namespace ChatServer
     public class ChatServer
     {
         private TcpListener _tcpListener;
-        private Dictionary<string, TcpClient> _clientsDictionary;
-        private object _clientsDictionaryLock;
-        private Queue<ChatMessage> _messagesQueue;
-        private object _messagesQueueLock;
-        private EventWaitHandle _eventWaitHandle;
 
         public void InitServer()
         {
             try
             {
-                InitVariables();
                 InitTcpListener();
                 InitQueueMessagesSenderThread();
 
@@ -28,23 +22,6 @@ namespace ChatServer
             {
                 Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitServer"));
                 CleanupServer();
-            }
-        }
-
-        private void InitVariables()
-        {
-            try
-            {
-                _clientsDictionary = new Dictionary<string, TcpClient>();
-                _clientsDictionaryLock = new object();
-                _messagesQueue = new Queue<ChatMessage>();
-                _messagesQueueLock = new object();
-                _eventWaitHandle = new AutoResetEvent(false);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitVariables"));
-                throw;
             }
         }
 
@@ -69,7 +46,7 @@ namespace ChatServer
         {
             try
             {
-                Thread senderThread = new Thread(new QueueMessagesSender(_messagesQueue, _messagesQueueLock, _eventWaitHandle, _clientsDictionary, _clientsDictionaryLock).HandleMessagesQueue);
+                Thread senderThread = new Thread(new QueueMessagesSender().HandleMessagesQueue);
                 senderThread.IsBackground = true;
                 senderThread.Start();
             }
@@ -85,12 +62,7 @@ namespace ChatServer
             try
             {
                 var connectionsListener = new NewConnectionsListener(
-                    _tcpListener,
-                    _clientsDictionary,
-                    _clientsDictionaryLock,
-                    _messagesQueue,
-                    _messagesQueueLock,
-                    _eventWaitHandle
+                    _tcpListener
                 );
                 connectionsListener.ListenToConnectionRequests();
             }
@@ -112,13 +84,13 @@ namespace ChatServer
                     _tcpListener = null;
                 }
 
-                lock (_clientsDictionaryLock)
+                lock (SharedResource.ClientsDictionaryLock)
                 {
-                    foreach (var client in _clientsDictionary.Values)
+                    foreach (var client in SharedResource.ClientsDictionary.Values)
                     {
                         client.Close();
                     }
-                    _clientsDictionary.Clear();
+                    SharedResource.ClientsDictionary.Clear();
                 }
             }
             catch (Exception ex)

@@ -6,22 +6,10 @@ namespace ChatServer
     public class NewConnectionsListener
     {
         private TcpListener _tcpListener;
-        private Dictionary<string, TcpClient> _clientsDictionary;
-        private object _clientsDictionaryLock;
-        private Queue<ChatMessage> _messagesQueue;
-        private object _messagesQueueLock;
-        private EventWaitHandle _eventWaitHandle;
 
-
-        public NewConnectionsListener(TcpListener tcpListener, Dictionary<string, TcpClient> clientsDictionary, object clientsDictionaryLock,
-            Queue<ChatMessage> messagesQueue, object messagesQueueLock, EventWaitHandle eventWaitHandle)
+        public NewConnectionsListener(TcpListener tcpListener)
         {
             _tcpListener = tcpListener;
-            _clientsDictionary = clientsDictionary;
-            _clientsDictionaryLock = clientsDictionaryLock;
-            _messagesQueue = messagesQueue;
-            _messagesQueueLock = messagesQueueLock;
-            _eventWaitHandle = eventWaitHandle;
         }
 
         public void ListenToConnectionRequests()
@@ -52,7 +40,7 @@ namespace ChatServer
         {
             try
             {
-                var singleConnectionListener = new SingleConnectionListener(_clientsDictionary, _clientsDictionaryLock, _messagesQueue, _messagesQueueLock, _eventWaitHandle, client);
+                var singleConnectionListener = new SingleConnectionListener(SharedResource.EventWaitHandle, client);
                 ThreadPool.QueueUserWorkItem(new WaitCallback(singleConnectionListener.HandleNewConnection));
             }
             catch (Exception ex)

@@ -5,13 +5,8 @@ namespace ChatServer
 {
     public class MessageSender
     {
-        private Dictionary<string, TcpClient> _clientsDictionary;
-        private Object _clientsDictionaryLock;
-
-        public MessageSender(Dictionary<string, TcpClient> clientsDictionary, Object clientsDictionaryLock)
+        public MessageSender()
         {
-            _clientsDictionary = clientsDictionary;
-            _clientsDictionaryLock = clientsDictionaryLock;
         }
 
         public void SendBroadcastMessage(ChatMessage chatMessage)
@@ -19,9 +14,9 @@ namespace ChatServer
             var convertedMessageBuffer = ChatMessageTranfer.PrepareMessageToBeSent(chatMessage);
             Dictionary<string, TcpClient>.ValueCollection allClients;
 
-            lock (_clientsDictionaryLock)
+            lock (SharedResource.ClientsDictionaryLock)
             {
-                allClients = _clientsDictionary.Values;
+                allClients = SharedResource.ClientsDictionary.Values;
             }
 
             Parallel.ForEach(allClients, (client) =>
@@ -36,9 +31,9 @@ namespace ChatServer
             TcpClient client;
             bool isDestinationUserExists = false;
 
-            lock (_clientsDictionaryLock)
+            lock (SharedResource.ClientsDictionaryLock)
             {
-                isDestinationUserExists = _clientsDictionary.TryGetValue(chatMessage.DestinationUsername.ToLower(), out client);
+                isDestinationUserExists = SharedResource.ClientsDictionary.TryGetValue(chatMessage.DestinationUsername.ToLower(), out client);
             }
 
             if (!isDestinationUserExists)

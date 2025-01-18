@@ -13,9 +13,6 @@ namespace ChatClient
     {
         private static readonly ChatClient _instance = new ChatClient();
 
-        public List<string> _connectedUsersList;
-        public object _connectedUsersListLock;
-
         private NetworkStream _stream;
         private TcpClient _client;
         private string _myUsername = string.Empty;
@@ -24,13 +21,6 @@ namespace ChatClient
         private ChatClient()
         {
             RegisterAppExistEvents();
-
-            _connectedUsersListLock = new object();
-
-            lock (_connectedUsersListLock)
-            {
-                _connectedUsersList = new List<string>();
-            }
         }
 
 
@@ -97,9 +87,9 @@ namespace ChatClient
         {
             try
             {
-                lock (_connectedUsersListLock)
+                lock (SharedResource.ConnectedUsersListLock)
                 {
-                    return _connectedUsersList;
+                    return SharedResource.ConnectedUsersList;
                 }
             }
             catch (Exception ex)
@@ -172,7 +162,7 @@ namespace ChatClient
         {
             try
             {
-                var clientListener = new ClientListener(_connectedUsersList, _connectedUsersListLock, _stream);
+                var clientListener = new ClientListener(_stream);
                 Thread listenerThread = new Thread(clientListener.ListenToIncomingMessages);
                 listenerThread.Start();
             }

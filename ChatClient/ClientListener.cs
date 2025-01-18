@@ -8,15 +8,11 @@ namespace ChatClient
 {
     public class ClientListener
     {
-        public List<string> _connectedUsersList;
-        private object _connectedUsersListLock;
         private NetworkStream _stream;
 
 
-        public ClientListener(List<string> connectedUsersList, object connectedUsersListLock, NetworkStream stream)
+        public ClientListener(NetworkStream stream)
         {
-            _connectedUsersList = connectedUsersList;
-            _connectedUsersListLock = connectedUsersListLock;
             _stream = stream;
         }
 
@@ -76,10 +72,10 @@ namespace ChatClient
 
                 if (message.MessageType == MessageType.ConnectedUsers)
                 {
-                    lock (_connectedUsersListLock)
+                    lock (SharedResource.ConnectedUsersListLock)
                     {
-                        _connectedUsersList.Clear();
-                        _connectedUsersList.AddRange(message.Message.Split(" "));
+                        SharedResource.ConnectedUsersList.Clear();
+                        SharedResource.ConnectedUsersList.AddRange(message.Message.Split(" "));
                     }
                     return;
                 }

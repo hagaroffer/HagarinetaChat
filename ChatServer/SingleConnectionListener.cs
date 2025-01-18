@@ -7,25 +7,16 @@ namespace ChatServer
 {
     public class SingleConnectionListener
     {
-        private Dictionary<string, TcpClient> _clientsDictionary;
-        private object _clientsDictionaryLock;
         private MessageSender _messageSender;
-        private Queue<ChatMessage> _messagesQueue;
-        private object _messagesQueueLock;
         private EventWaitHandle _eventWaitHandle;
         TcpClient _client;
         NetworkStream _stream;
 
-        public SingleConnectionListener(Dictionary<string, TcpClient> clientsDictionary, object clientsDictionaryLock,
-            Queue<ChatMessage> messagesQueue, object messagesQueueLock, EventWaitHandle eventWaitHandle, TcpClient client)
+        public SingleConnectionListener(EventWaitHandle eventWaitHandle, TcpClient client)
         {
-            _clientsDictionary = clientsDictionary;
-            _clientsDictionaryLock = clientsDictionaryLock;
-            _messageSender = new MessageSender(_clientsDictionary, _clientsDictionaryLock);
-            _messagesQueue = messagesQueue;
-            _messagesQueueLock = messagesQueueLock;
             _eventWaitHandle = eventWaitHandle;
             _client = client;
+            _messageSender = new MessageSender();
         }
 
         public void HandleNewConnection(object o)
@@ -80,9 +71,9 @@ namespace ChatServer
                     return;
                 }
 
-                lock (_messagesQueueLock)
+                lock (SharedResource.MessagesQueueLock)
                 {
-                    _messagesQueue.Enqueue(message);
+                    SharedResource.MessagesQueue.Enqueue(message);
                     _eventWaitHandle.Set();
                 }
             }
@@ -98,11 +89,11 @@ namespace ChatServer
         {
             try
             {
-                lock (_clientsDictionaryLock)
+                lock (SharedResource.ClientsDictionaryLock)
                 {
-                    if (_clientsDictionary.ContainsKey(username))
+                    if (SharedResource.ClientsDictionary.ContainsKey(username))
                     {
-                        _clientsDictionary.Remove(username);
+                        SharedResource.ClientsDictionary.Remove(username);
                         Console.WriteLine($"Client {username} removed from the dictionary.");
                     }
                 }
@@ -166,9 +157,9 @@ namespace ChatServer
         private bool IsUsernameUnique(string username)
         {
             bool isUsernameAlreadyExists;
-            lock (_clientsDictionaryLock)
+            lock (SharedResource.ClientsDictionaryLock)
             {
-                isUsernameAlreadyExists = _clientsDictionary.ContainsKey(username);
+                isUsernameAlreadyExists = SharedResource.ClientsDictionary.ContainsKey(username);
             }
 
             return !isUsernameAlreadyExists;
@@ -178,9 +169,9 @@ namespace ChatServer
         {
             try
             {
-                lock (_clientsDictionaryLock)
+                lock (SharedResource.ClientsDictionaryLock)
                 {
-                    _clientsDictionary.Add(username, _client);
+                    SharedResource.ClientsDictionary.Add(username, _client);
                 }
             }
             catch (Exception ex)
@@ -210,7 +201,12 @@ namespace ChatServer
         {
             try
             {
-                string usersString = string.Join(" ", _clientsDictionary.Keys.ToArray());
+                string usersString;
+                lock (SharedResource.ClientsDictionaryLock)
+                {
+                    usersString = string.Join(" ", SharedResource.ClientsDictionary.Keys.ToArray());
+                }
+
                 ChatMessage broadcastConnectionMessage =
                         new ChatMessage(MessageType.ConnectedUsers, string.Empty, string.Format(usersString));
                 broadcastConnectionMessage.SourceUsername = "Server";
