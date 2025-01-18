@@ -35,28 +35,27 @@ namespace ChatServer
 
                 var userName = CreateNewClient(stream);
 
-                while (true)
+                while (_client.Connected)
                 {
                     try
                     {
                         ListenToNewCreatedConnection(stream, userName);
                     }
+                    catch (IOException)
+                    {
+                        Console.WriteLine($"Client {userName} disconnected.");
+                        HandleClientDisconnect(userName, _client, stream);
+                        break;
+                    }
                     catch (Exception ex)
                     {
                         Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "ListenToNewCreatedConnection"));
-                        break;
                     }
                 }
-            }
-            catch (SocketException ex)
-            {
-                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleNewConnection - Socket Exception"));
-                return;
             }
             catch (Exception ex)
             {
                 Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleNewConnection"));
-                return;
             }
         }
 
@@ -65,10 +64,17 @@ namespace ChatServer
             try
             {
                 var message = ReadMessage(stream);
+
+                if (message == null)
+                {
+                    throw new IOException("Message is null, client might have disconnected.");
+                }
+
                 message.SourceUsername = userName;
 
                 if (message.MessageType == MessageType.Disconnect)
                 {
+                    Console.WriteLine($"User {userName} requested disconnect.");
                     HandleClientDisconnect(userName, _client, stream);
                     return;
                 }
@@ -82,8 +88,10 @@ namespace ChatServer
             catch (Exception ex)
             {
                 Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "ListenToNewCreatedConnection"));
+                throw;
             }
         }
+
 
         private void HandleClientDisconnect(string userName, TcpClient client, NetworkStream stream)
         {
@@ -91,19 +99,17 @@ namespace ChatServer
             {
                 lock (_clientsDictionaryLock)
                 {
-                    _clientsDictionary.Remove(userName);
+                    if (_clientsDictionary.ContainsKey(userName))
+                    {
+                        _clientsDictionary.Remove(userName);
+                        Console.WriteLine($"Client {userName} removed from the dictionary.");
+                    }
                 }
+
+                SendConnectedClients();
 
                 stream?.Close();
                 client?.Close();
-            }
-            catch (SocketException ex)
-            {
-                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleClientDisconnect - Socket Exception"));
-            }
-            catch (IOException ex)
-            {
-                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "HandleClientDisconnect - IO Error"));
             }
             catch (Exception ex)
             {

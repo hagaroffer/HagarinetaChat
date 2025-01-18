@@ -35,25 +35,16 @@ namespace ChatServer
             }
             catch (Exception ex)
             {
-                return;
+                Console.WriteLine($"Error in ListenToConnectionRequests: {ex.Message}");
             }
         }
 
-        private async Task WaitForNewConnectionRequest()
+        private void WaitForNewConnectionRequest()
         {
             if (_tcpListener.Pending())
             {
-                try
-                {
-                    var client = await _tcpListener.AcceptTcpClientAsync();
-
-                    InitSingleConnectionListenerThread(client);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "WaitForNewConnectionRequest"));
-                    throw;
-                }
+                var client = _tcpListener.AcceptTcpClient();
+                InitSingleConnectionListenerThread(client);
             }
         }
 

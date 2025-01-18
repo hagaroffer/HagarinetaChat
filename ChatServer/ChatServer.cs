@@ -24,11 +24,6 @@ namespace ChatServer
                 Console.WriteLine("Chat server is running");
                 ListenToNewConnectionRequests();
             }
-            catch (SocketException ex)
-            {
-                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitServer - Socket Error"));
-                CleanupServer();
-            }
             catch (Exception ex)
             {
                 Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitServer"));
@@ -62,16 +57,6 @@ namespace ChatServer
 
                 _tcpListener = new TcpListener(IPAddress.Parse(ipAddress), port);
                 _tcpListener.Start();
-            }
-            catch (FormatException ex)
-            {
-                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitTcpListener - Invalid IP or Port"));
-                throw;
-            }
-            catch (SocketException ex)
-            {
-                Console.WriteLine(CommonCommands.CreateExceptionMsg(ex, "InitTcpListener - Socket Error"));
-                throw;
             }
             catch (Exception ex)
             {
@@ -125,6 +110,15 @@ namespace ChatServer
                 {
                     _tcpListener.Stop();
                     _tcpListener = null;
+                }
+
+                lock (_clientsDictionaryLock)
+                {
+                    foreach (var client in _clientsDictionary.Values)
+                    {
+                        client.Close();
+                    }
+                    _clientsDictionary.Clear();
                 }
             }
             catch (Exception ex)
