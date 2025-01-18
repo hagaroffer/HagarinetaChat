@@ -38,8 +38,5 @@ namespace ChatCommon
         public string FileNameWithExtension { get; set; }
 
         public byte[] Content { get; set; }
-
-        public long FileLength { get; set; }
-
     }
 }

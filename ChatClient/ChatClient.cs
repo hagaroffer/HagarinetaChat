@@ -197,8 +197,7 @@ namespace ChatClient
         {
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
             {
-                long length = new FileInfo(filePath).Length;
-                var file = new ChatFile() { FileNameWithExtension = Path.GetFileName(filePath), Content = File.ReadAllBytes(filePath), FileLength = length };
+                var file = new ChatFile() { FileNameWithExtension = Path.GetFileName(filePath), Content = File.ReadAllBytes(filePath)};
                 chatMessage.File = file;
             }
         }

@@ -10,15 +10,18 @@ namespace ChatCommon
         {
             try
             {
-                byte[] data = new byte[1000000];
+                byte[] data = new byte[1000000]; /* This solution won't work with big files such as videos.. :( */
                 int bytesRead = stream.Read(data, 0, 1000000);
+                if (bytesRead == 1000000)
+                {
+                    return null;
+                }
 
                 using (MemoryStream ms = new MemoryStream(data, 0, bytesRead))
                 {
                     var message = JsonSerializer.Deserialize<ChatMessage>(ms);
                     return message;
                 }
-
             }
             catch (Exception ex)
             {
