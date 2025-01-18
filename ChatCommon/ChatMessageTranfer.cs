@@ -6,12 +6,12 @@ namespace ChatCommon
 {
     public static class ChatMessageTranfer
     {
-        public static async Task<ChatMessage> ReadMessage(NetworkStream stream)
+        public static ChatMessage ReadMessage(NetworkStream stream)
         {
             try
             {
                 byte[] data = new byte[1000000];
-                int bytesRead = await stream.ReadAsync(data, 0, 1000000);
+                int bytesRead = stream.Read(data, 0, 1000000);
 
                 using (MemoryStream ms = new MemoryStream(data, 0, bytesRead))
                 {
@@ -33,9 +33,9 @@ namespace ChatCommon
             return myWriteBuffer;
         }
 
-        public static async Task SendMessage(byte[] convertedMessageBuffer, NetworkStream stream)
+        public static void SendMessage(byte[] convertedMessageBuffer, NetworkStream stream)
         {
-            await stream.WriteAsync(convertedMessageBuffer, 0, convertedMessageBuffer.Length);
+            stream.Write(convertedMessageBuffer, 0, convertedMessageBuffer.Length);
         }
     }
 }

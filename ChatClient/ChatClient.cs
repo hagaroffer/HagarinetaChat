@@ -215,13 +215,12 @@ namespace ChatClient
             ChatMessageTranfer.SendMessage(convertedMessageBuffer, _stream);
         }
 
-        private async Task HandleFileInMessage(ChatMessage chatMessage, string filePath)
+        private void HandleFileInMessage(ChatMessage chatMessage, string filePath)
         {
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
             {
                 long length = new FileInfo(filePath).Length;
-                var fileContent = await File.ReadAllBytesAsync(filePath);
-                var file = new ChatFile() { FileNameWithExtension = Path.GetFileName(filePath), Content = fileContent, FileLength = length };
+                var file = new ChatFile() { FileNameWithExtension = Path.GetFileName(filePath), Content = File.ReadAllBytes(filePath), FileLength = length };
                 chatMessage.File = file;
             }
         }

@@ -59,7 +59,7 @@ namespace ChatClient
         {
             try
             {
-                return ChatMessageTranfer.ReadMessage(ChatClient._stream).Result;
+                return ChatMessageTranfer.ReadMessage(ChatClient._stream);
             }
             catch (Exception ex)
             {
@@ -68,7 +68,7 @@ namespace ChatClient
             }
         }
 
-        private async Task ProcessMessage(ChatMessage message)
+        private void ProcessMessage(ChatMessage message)
         {
             try
             {
@@ -101,7 +101,7 @@ namespace ChatClient
                 if (message.File != null)
                 {
                     string filePath = CreateNewFilePath(message.File.FileNameWithExtension);
-                    await File.WriteAllBytesAsync(filePath, message.File.Content);
+                    File.WriteAllBytes(filePath, message.File.Content);
                     messageToShow += string.Format(", and a file: {0}", filePath);
                 }
 

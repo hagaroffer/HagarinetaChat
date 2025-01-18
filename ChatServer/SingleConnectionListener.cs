@@ -147,7 +147,7 @@ namespace ChatServer
         {
             try
             {
-                return ChatMessageTranfer.ReadMessage(stream).Result;
+                return ChatMessageTranfer.ReadMessage(stream);
             }
             catch (Exception ex)
             {
